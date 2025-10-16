@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 لعبة الذاكرة - Taim Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            border: 3px solid #ffd700;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            border: 2px solid #dee2e6;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .info-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 25px auto;
+            max-width: 450px;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            transform: rotateY(180deg);
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            border: 3px solid transparent;
+        }
+
+        .card:hover {
+            transform: rotateY(180deg) scale(1.05);
+        }
+
+        .card:active {
+            transform: rotateY(180deg) scale(0.95);
+        }
+
+        .card.flipped {
+            transform: rotateY(0deg) scale(1.05);
+            background: white;
+            color: #333;
+            border-color: #667eea;
+        }
+
+        .card.flipped:active {
+            transform: rotateY(0deg) scale(1);
+        }
+
+        .card.matched {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            transform: rotateY(0deg);
+            cursor: default;
+            border-color: #4CAF50;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .controls {
+            margin: 25px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            min-width: 140px;
+            font-weight: bold;
+        }
+
+        button:active {
+            transform: scale(0.95);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .win-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .win-content {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            padding: 40px 30px;
+            border-radius: 25px;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            border: 4px solid #ffd700;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .win-content h2 {
+            color: #4CAF50;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .win-message {
+            font-size: 1.4em;
+            margin: 20px 0;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .falafel {
+            font-size: 5em;
+            margin: 20px 0;
+            animation: bounce 1s infinite alternate, rotate 3s infinite linear;
+            display: inline-block;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-20px) scale(1.1); }
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .win-stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #dee2e6;
+        }
+
+        .win-stats p {
+            margin: 8px 0;
+            font-size: 1.1em;
+            color: #555;
+        }
+
+        .copyright {
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9em;
+            border-top: 2px solid #eee;
+            padding-top: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .developer {
+            color: #667eea;
+            font-weight: bold;
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        .copyright-text {
+            color: #888;
+            margin: 5px 0;
+        }
+
+        /* تحسينات للجوال */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 15px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            
+            .card {
+                font-size: 1.8em;
+                border-radius: 12px;
+            }
+            
+            button {
+                padding: 12px 20px;
+                font-size: 1em;
+                min-width: 120px;
+            }
+            
+            .game-info {
+                padding: 12px;
+                font-size: 1em;
+            }
+            
+            .info-value {
+                font-size: 1.2em;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+
+        /* تحسينات اللمس */
+        .card {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* تأثيرات خاصة */
+        .celebration {
+            position: fixed;
+            pointer-events: none;
+            font-size: 2em;
+            animation: float 2s ease-out forwards;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 لعبة الذاكرة 🧠</h1>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">🎯 المحاولات</div>
+                <div class="info-value" id="attempts">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">🔍 الأزواج</div>
+                <div class="info-value" id="matches">0/8</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">⏱️ الوقت</div>
+                <div class="info-value" id="timer">00:00</div>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+            <!-- البطاقات تُضاف هنا بالجافاسكريبت -->
+        </div>
+
+        <div class="controls">
+            <button onclick="startNewGame()">🔄 لعبة جديدة</button>
+            <button onclick="resetGame()">🔄 إعادة تعيين</button>
+            <button onclick="showInstructions()">📋 التعليمات</button>
+        </div>
+
+        <div class="copyright">
+            <p class="developer">✨ تم التطوير بواسطة Taim ✨</p>
+            <p class="copyright-text">© 2025 جميع الحقوق محفوظة 🛡️</p>
+            <p class="copyright-text">CopyRight 2025 - Taim Games 🎮</p>
+        </div>
+    </div>
+
+    <div class="win-screen" id="winScreen">
+        <div class="win-content">
+            <h2>🎉 مبروك! فزت! 🎉</h2>
+            <div class="falafel">🥙</div>
+            <div class="win-message">ربحت سندويشة فلافل! 🥙🎊</div>
+            
+            <div class="win-stats">
+                <p>⏱️ الوقت: <span id="winTime">00:00</span></p>
+                <p>🎯 المحاولات: <span id="winAttempts">0</span></p>
+                <p>⭐ الكفاءة: <span id="efficiency">0%</span></p>
+            </div>
+            
+            <button onclick="closeWinScreen()">🎮 العب مرة أخرى</button>
+        </div>
+    </div>
+
+    <script>
+        const shapes = ['⭐', '❤️', '🔵', '🔶', '🟢', '🟣', '🔷', '🟠'];
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let attempts = 0;
+        let gameStarted = false;
+        let startTime;
+        let timerInterval;
+
+        // إنشاء اللعبة
+        function initializeGame() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            // إنشاء أزواج البطاقات
+            cards = [];
+            shapes.forEach(shape => {
+                cards.push(shape);
+                cards.push(shape);
+            });
+            
+            // خلط البطاقات
+            shuffleArray(cards);
+            
+            // إنشاء البطاقات في الواجهة
+            cards.forEach((shape, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = '?';
+                card.dataset.index = index;
+                card.dataset.shape = shape;
+                
+                // دعم اللمس والنقر
+                card.addEventListener('click', () => flipCard(card));
+                card.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    flipCard(card);
+                }, { passive: false });
+                
+                gameBoard.appendChild(card);
+            });
+            
+            // إعادة تعيين الإحصائيات
+            matchedPairs = 0;
+            attempts = 0;
+            flippedCards = [];
+            updateStats();
+            
+            // إيقاف المؤقت إذا كان يعمل
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            document.getElementById('timer').textContent = '00:00';
+            gameStarted = false;
+        }
+
+        // خلط البطاقات
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // قلب البطاقة
+        function flipCard(card) {
+            if (!gameStarted) {
+                startGame();
+            }
+            
+            if (flippedCards.length < 2 && 
+                !card.classList.contains('flipped') && 
+                !card.classList.contains('matched')) {
+                
+                card.classList.add('flipped');
+                card.innerHTML = card.dataset.shape;
+                flippedCards.push(card);
+                
+                // تأثير اهتزاز
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(50);
+                }
+                
+                if (flippedCards.length === 2) {
+                    attempts++;
+                    updateStats();
+                    setTimeout(checkForMatch, 500);
+                }
+            }
+        }
+
+        // التحقق من تطابق البطاقات
+        function checkForMatch() {
+            const [card1, card2] = flippedCards;
+            
+            if (card1.dataset.shape === card2.dataset.shape) {
+                // تطابق ناجح
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                flippedCards = [];
+                
+                // تأثير احتفال
+                createCelebration();
+                
+                if (matchedPairs === shapes.length) {
+                    setTimeout(showWinScreen, 1000);
+                }
+            } else {
+                // لا يوجد تطابق
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    card1.innerHTML = '?';
+                    card2.innerHTML = '?';
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+
+        // إنشاء تأثير احتفال
+        function createCelebration() {
+            const celebrations = ['🎉', '✨', '🌟', '🥳', '🎊'];
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const celebration = document.createElement('div');
+                    celebration.className = 'celebration';
+                    celebration.textContent = celebrations[Math.floor(Math.random() * celebrations.length)];
+                    celebration.style.left = Math.random() * 100 + 'vw';
+                    celebration.style.top = '100vh';
+                    document.body.appendChild(celebration);
+                    
+                    setTimeout(() => {
+                        celebration.remove();
+                    }, 2000);
+                }, i * 200);
+            }
+        }
+
+        // تحديث الإحصائيات
+        function updateStats() {
+            document.getElementById('attempts').textContent = attempts;
+            document.getElementById('matches').textContent = `${matchedPairs}/${shapes.length}`;
+        }
+
+        // بدء المؤقت
+        function startGame() {
+            if (!gameStarted) {
+                gameStarted = true;
+                startTime = new Date();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+        }
+
+        // تحديث المؤقت
+        function updateTimer() {
+            const currentTime = new Date();
+            const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+            const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+            const seconds = (elapsedTime % 60).toString().padStart(2, '0');
+            document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+        }
+
+        // عرض شاشة الفوز
+        function showWinScreen() {
+            clearInterval(timerInterval);
+            const time = document.getElementById('timer').textContent;
+            document.getElementById('winTime').textContent = time;
+            document.getElementById('winAttempts').textContent = attempts;
+            
+            // حساب الكفاءة
+            const minAttempts = shapes.length;
+            const efficiency = Math.max(0, Math.min(100, Math.round((minAttempts / attempts) * 100)));
+            document.getElementById('efficiency').textContent = efficiency + '%';
+            
+            document.getElementById('winScreen').style.display = 'flex';
+            
+            // تأثير اهتزاز الفوز
+            if ('vibrate' in navigator) {
+                navigator.vibrate([100, 50, 100, 50, 100]);
+            }
+        }
+
+        // إغلاق شاشة الفوز
+        function closeWinScreen() {
+            document.getElementById('winScreen').style.display = 'none';
+            initializeGame();
+        }
+
+        // بدء لعبة جديدة
+        function startNewGame() {
+            initializeGame();
+        }
+
+        // إعادة تعيين اللعبة
+        function resetGame() {
+            initializeGame();
+        }
+
+        // عرض التعليمات
+        function showInstructions() {
+            alert(`🎮 كيفية اللعب:
+            
+1. 🎯 انقر على البطاقات لقلبها
+2. 🔍 ابحث عن الأزواج المتطابقة
+3. ✅ كل زوج متطابق يبقى مكشوفاً
+4. 🏆 اكشف جميع الأزواج لتربح سندويشة فلافل! 🥙
+
+⭐ كلما قلّت المحاولات، زادت نقاطك!`);
+        }
+
+        // تهيئة اللعبة عند تحميل الصفحة
+        window.onload = initializeGame;
+
+        // منع سلوك التكبير باللمس المزدوج
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
